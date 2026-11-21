@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catálogo de productos</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">API REST + PostgreSQL</p>
+      <h1>Catálogo de productos</h1>
+    </div>
+    <div class="session" id="session">
+      <span class="session-dot"></span>
+      <span>Sesión pública</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <nav class="tabs" aria-label="Secciones">
+        <button class="tab active" data-tab="catalogo">Catálogo</button>
+        <button class="tab" data-tab="favoritos">Mis favoritos</button>
+        <button class="tab admin-only hidden" data-tab="administracion">Administración</button>
+        <button class="tab" data-tab="pruebas">Pruebas</button>
+      </nav>
+
+      <section class="card auth-card">
+        <div class="card-heading">
+          <h2>Acceso</h2>
+          <span id="roleBadge" class="badge">público</span>
+        </div>
+
+        <div id="authForms">
+          <div class="field-row">
+            <button id="showLogin" class="text-button active">Iniciar sesión</button>
+            <button id="showRegister" class="text-button">Registrarse</button>
+          </div>
+
+          <form id="loginForm" class="form-stack">
+            <label>Correo<input type="email" name="email" required value="admin@example.com"></label>
+            <label>Contraseña<input type="password" name="password" required value="Admin1234!"></label>
+            <button class="button primary" type="submit">Entrar</button>
+          </form>
+
+          <form id="registerForm" class="form-stack hidden">
+            <label>Nombre<input type="text" name="name" required></label>
+            <label>Correo<input type="email" name="email" required></label>
+            <label>Contraseña<input type="password" name="password" minlength="8" required></label>
+            <button class="button primary" type="submit">Crear usuario</button>
+          </form>
+        </div>
+        <button id="logoutButton" class="button secondary hidden" type="button">Cerrar sesión</button>
+      </section>
+    </aside>
+
+    <section class="content">
+      <div id="catalogo" class="panel active">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Acceso público</p>
+            <h2>Productos</h2>
+          </div>
+          <label class="filter">Categoría
+            <select id="categoryFilter">
+              <option value="">Todas</option>
+              <option value="periféricos">Periféricos</option>
+              <option value="pantallas">Pantallas</option>
+              <option value="accesorios">Accesorios</option>
+              <option value="audio">Audio</option>
+            </select>
+          </label>
+        </div>
+        <div id="productsGrid" class="grid"></div>
+      </div>
+
+      <div id="favoritos" class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Usuario autenticado</p>
+            <h2>Mis favoritos</h2>
+          </div>
+          <button id="refreshFavorites" class="button secondary">Actualizar</button>
+        </div>
+        <div id="favoritesGrid" class="grid"></div>
+      </div>
+
+      <div id="administracion" class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Solo administrador</p>
+            <h2>Gestionar productos</h2>
+          </div>
+        </div>
+
+        <form id="productForm" class="product-form card">
+          <input type="hidden" name="id">
+          <label>Nombre<input name="name" required maxlength="120"></label>
+          <label>Descripción<textarea name="description" required></textarea></label>
+          <label>Categoría<input name="category" required maxlength="80"></label>
+          <label>Precio<input name="price" type="number" min="0.01" step="0.01" required></label>
+          <div class="form-actions">
+            <button class="button primary" type="submit">Guardar producto</button>
+            <button id="cancelEdit" class="button secondary hidden" type="button">Cancelar edición</button>
+          </div>
+        </form>
+        <div id="adminProducts" class="grid"></div>
+      </div>
+
+      <div id="pruebas" class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Diagnóstico visual</p>
+            <h2>Pruebas rápidas</h2>
+          </div>
+          <button id="clearLog" class="button secondary">Limpiar registro</button>
+        </div>
+        <div class="test-actions">
+          <button class="button test" data-test="health">Verificar servidor</button>
+          <button class="button test" data-test="products">Consultar catálogo</button>
+          <button class="button test" data-test="noToken">Favoritos sin token</button>
+          <button class="button test" data-test="invalidPrice">Precio inválido</button>
+          <button class="button test" data-test="missingProduct">Producto inexistente</button>
+          <button class="button test" data-test="duplicateFavorite">Favorito duplicado</button>
+          <button class="button test" data-test="restart">Reconsultar persistencia</button>
+        </div>
+        <div id="testLog" class="test-log" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status"></div>
+  <script src="/app.js"></script>
+</body>
+</html>

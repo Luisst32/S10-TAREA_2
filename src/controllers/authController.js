@@ -4,12 +4,16 @@ const pool = require('../db/pool');
 require('dotenv').config();
 
 const publicUser = (user) => ({ id: user.id, name: user.name, email: user.email, role: user.role });
+const validEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 async function register(req, res, next) {
   try {
     const { name, email, password } = req.body;
     if (!name?.trim() || !email?.trim() || typeof password !== 'string' || password.length < 8) {
       return res.status(400).json({ error: 'Nombre, correo y contraseña de al menos 8 caracteres son obligatorios.' });
+    }
+    if (!validEmail(email.trim())) {
+      return res.status(400).json({ error: 'El correo no tiene un formato válido.' });
     }
     const passwordHash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(

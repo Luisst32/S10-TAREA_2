@@ -1,0 +1,13 @@
+{
+  "id": "catalogo-productos-env",
+  "name": "Catálogo local",
+  "values": [
+    { "key": "baseUrl", "value": "http://localhost:3000", "enabled": true },
+    { "key": "adminToken", "value": "", "enabled": true },
+    { "key": "tokenA", "value": "", "enabled": true },
+    { "key": "tokenB", "value": "", "enabled": true },
+    { "key": "productId", "value": "1", "enabled": true }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_using": "Postman"
+}

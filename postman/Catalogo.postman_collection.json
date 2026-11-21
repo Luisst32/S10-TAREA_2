@@ -1,0 +1,308 @@
+{
+  "info": {
+    "name": "Catálogo de productos - pruebas",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Registro usuario A",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Usuario A\",\n  \"email\": \"usuario.a@example.com\",\n  \"password\": \"ClaveA1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/registro"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Registro creado', function () { pm.expect(pm.response.code).to.eql(201); });",
+            "pm.test('Rol siempre usuario', function () { pm.expect(pm.response.json().user.role).to.eql('usuario'); });"
+          ] } }]
+        },
+        {
+          "name": "Correo duplicado",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Usuario duplicado\",\n  \"email\": \"usuario.a@example.com\",\n  \"password\": \"ClaveD1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/registro"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Duplica correo', function () { pm.expect(pm.response.code).to.eql(409); });"] } }]
+        },
+        {
+          "name": "Login usuario A",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"usuario.a@example.com\",\n  \"password\": \"ClaveA1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Login correcto', function () { pm.expect(pm.response.code).to.eql(200); });",
+            "pm.environment.set('tokenA', pm.response.json().token);"
+          ] } }]
+        },
+        {
+          "name": "Login credenciales incorrectas",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"email\": \"usuario.a@example.com\", \"password\": \"incorrecta\" }" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Credenciales rechazadas', function () { pm.expect(pm.response.code).to.eql(401); });"] } }]
+        },
+        {
+          "name": "Login administrador",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Administrador autenticado', function () { pm.expect(pm.response.code).to.eql(200); });",
+            "pm.environment.set('adminToken', pm.response.json().token);"
+          ] } }]
+        }
+      ]
+    },
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "Listar público",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/productos" },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Listado público', function () { pm.expect(pm.response.code).to.eql(200); });",
+            "pm.test('Hay productos', function () { pm.expect(pm.response.json().products.length).to.be.above(0); });"
+          ] } }]
+        },
+        {
+          "name": "Crear producto admin",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Cámara prueba\",\n  \"description\": \"Producto creado desde Postman\",\n  \"category\": \"imagen\",\n  \"price\": 89.99\n}" },
+            "url": "{{baseUrl}}/api/productos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Creado', function () { pm.expect(pm.response.code).to.eql(201); });",
+            "pm.environment.set('productId', pm.response.json().product.id);"
+          ] } }]
+        },
+        {
+          "name": "Filtrar por categoría",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/productos?category=periféricos" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Filtro correcto', function () { pm.expect(pm.response.code).to.eql(200); });"] } }]
+        },
+        {
+          "name": "Consultar producto",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/productos/{{productId}}" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Consulta correcta', function () { pm.expect(pm.response.code).to.eql(200); });"] } }]
+        },
+        {
+          "name": "Actualizar producto admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Cámara actualizada\",\n  \"description\": \"Descripción actualizada\",\n  \"category\": \"imagen\",\n  \"price\": 79.99\n}" },
+            "url": "{{baseUrl}}/api/productos/{{productId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Actualizado', function () { pm.expect(pm.response.code).to.eql(200); });"] } }]
+        },
+        {
+          "name": "Rechazar precio inválido",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{adminToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"name\": \"Invalido\", \"description\": \"X\", \"category\": \"x\", \"price\": -1 }" },
+            "url": "{{baseUrl}}/api/productos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Precio rechazado', function () { pm.expect(pm.response.code).to.eql(400); });"] } }]
+        },
+        {
+          "name": "Producto inexistente",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/productos/999999" },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Inexistente', function () { pm.expect(pm.response.code).to.eql(404); });"] } }]
+        },
+        {
+          "name": "Crear producto sin token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"name\": \"X\", \"description\": \"X\", \"category\": \"X\", \"price\": 1 }" },
+            "url": "{{baseUrl}}/api/productos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Sin token', function () { pm.expect(pm.response.code).to.eql(401); });"] } }]
+        },
+        {
+          "name": "Acceso protegido sin token",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/favoritos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Favoritos sin token', function () { pm.expect(pm.response.code).to.eql(401); });"] } }]
+        },
+        {
+          "name": "Usuario modifica catálogo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenA}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"name\": \"X\", \"description\": \"X\", \"category\": \"X\", \"price\": 1 }" },
+            "url": "{{baseUrl}}/api/productos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Rol insuficiente', function () { pm.expect(pm.response.code).to.eql(403); });"] } }]
+        },
+        {
+          "name": "Eliminar producto admin",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{adminToken}}" }],
+            "url": "{{baseUrl}}/api/productos/{{productId}}"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Eliminado', function () { pm.expect(pm.response.code).to.eql(204); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Favoritos",
+      "item": [
+        {
+          "name": "Agregar favorito A",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenA}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"productId\": 1 }" },
+            "url": "{{baseUrl}}/api/favoritos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Favorito creado', function () { pm.expect(pm.response.code).to.eql(201); });"
+          ] } }]
+        },
+        {
+          "name": "Favorito duplicado",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenA}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"productId\": 1 }" },
+            "url": "{{baseUrl}}/api/favoritos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Duplicado rechazado', function () { pm.expect(pm.response.code).to.eql(409); });"] } }]
+        },
+        {
+          "name": "Listar favoritos A",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+            "url": "{{baseUrl}}/api/favoritos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Favoritos listados', function () { pm.expect(pm.response.code).to.eql(200); });",
+            "pm.test('Contiene producto', function () { pm.expect(pm.response.json().favorites.length).to.be.above(0); });"
+          ] } }]
+        },
+        {
+          "name": "Favorito producto inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{tokenA}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{ \"productId\": 999999 }" },
+            "url": "{{baseUrl}}/api/favoritos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Producto inexistente', function () { pm.expect(pm.response.code).to.eql(404); });"] } }]
+        },
+        {
+          "name": "Registro usuario B",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Usuario B\",\n  \"email\": \"usuario.b@example.com\",\n  \"password\": \"ClaveB1234!\"\n}" },
+            "url": "{{baseUrl}}/api/auth/registro"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Usuario B creado', function () { pm.expect(pm.response.code).to.eql(201); });"] } }]
+        },
+        {
+          "name": "Login usuario B",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"email\": \"usuario.b@example.com\", \"password\": \"ClaveB1234!\" }" },
+            "url": "{{baseUrl}}/api/auth/login"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('Login B correcto', function () { pm.expect(pm.response.code).to.eql(200); });",
+            "pm.environment.set('tokenB', pm.response.json().token);"
+          ] } }]
+        },
+        {
+          "name": "B no ve favoritos de A",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+            "url": "{{baseUrl}}/api/favoritos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('B aislado', function () { pm.expect(pm.response.code).to.eql(200); });",
+            "pm.test('B tiene lista propia vacía', function () { pm.expect(pm.response.json().favorites.length).to.eql(0); });"
+          ] } }]
+        },
+        {
+          "name": "B intenta quitar favorito de A",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenB}}" }],
+            "url": "{{baseUrl}}/api/favoritos/1"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('No elimina el favorito ajeno', function () { pm.expect(pm.response.code).to.eql(404); });"] } }]
+        },
+        {
+          "name": "A conserva su favorito",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+            "url": "{{baseUrl}}/api/favoritos"
+          },
+          "event": [{ "listen": "test", "script": { "exec": [
+            "pm.test('A conserva favorito', function () { pm.expect(pm.response.code).to.eql(200); });",
+            "pm.test('Favorito permanece', function () { pm.expect(pm.response.json().favorites.length).to.be.above(0); });"
+          ] } }]
+        },
+        {
+          "name": "Eliminar favorito A",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{tokenA}}" }],
+            "url": "{{baseUrl}}/api/favoritos/1"
+          },
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('Favorito eliminado', function () { pm.expect(pm.response.code).to.eql(200); });"] } }]
+        }
+      ]
+    }
+  ]
+}

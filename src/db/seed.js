@@ -19,7 +19,9 @@ async function seed() {
   for (const product of products) {
     await pool.query(
       `INSERT INTO products (name, description, category, price)
-       SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = $1)`, product
+       SELECT $1::varchar, $2::text, $3::varchar, $4::numeric
+       WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = $1::varchar)`,
+      product
     );
   }
   console.log('Administrador y cinco productos de ejemplo preparados.');
