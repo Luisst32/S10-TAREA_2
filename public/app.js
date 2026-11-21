@@ -173,7 +173,8 @@ async function submitAuth(event, register = false) {
 
 async function saveProduct(event) {
   event.preventDefault();
-  const data = Object.fromEntries(new FormData(event.currentTarget));
+  const form = event.currentTarget;
+  const data = Object.fromEntries(new FormData(form));
   const id = data.id;
   delete data.id;
   try {
@@ -183,7 +184,7 @@ async function saveProduct(event) {
       body: JSON.stringify(data),
     });
     toast(id ? 'Producto actualizado.' : 'Producto creado.');
-    event.currentTarget.reset();
+    form.reset();
     $('#cancelEdit').classList.add('hidden');
     loadProducts();
     loadAdminProducts();
